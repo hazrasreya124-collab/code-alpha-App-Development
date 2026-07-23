@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is HTML?",
+    "answer": "HTML stands for HyperText Markup Language."
+  },
+  {
+    "question": "What is CSS?",
+    "answer": "CSS is used to style and design web pages."
+  },
+  {
+    "question": "What is JavaScript?",
+    "answer": "JavaScript adds interactivity to web pages."
+  }
+]
