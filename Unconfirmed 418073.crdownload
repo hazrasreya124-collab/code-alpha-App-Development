@@ -1,0 +1,240 @@
+// Login state
+let currentUser = null;
+
+// Default flashcard deck
+let deck = [
+  { q: "What is overfitting?", a: "When a model learns noise and detail in the training data to an extent that it hurts its performance on new, unseen data." },
+  { q: "Precision vs. Recall — what's the difference?", a: "Precision is the share of predicted positives that are correct. Recall is the share of actual positives the model correctly found." },
+  { q: "What does a p-value tell you?", a: "The probability of observing results at least as extreme as yours, assuming the null hypothesis is true — small p-values suggest the null is unlikely." },
+  { q: "Normalization vs. Standardization?", a: "Normalization rescales values into a fixed range like 0 to 1. Standardization centers data to mean 0 with unit variance (z-score)." },
+  { q: "Explain the bias-variance tradeoff.", a: "Bias is error from overly simple assumptions; variance is error from sensitivity to training data. Reducing one typically increases the other." },
+  { q: "What is a confusion matrix?", a: "A table comparing predicted vs actual class labels, breaking results into true/false positives and true/false negatives." }
+];
+
+let current = 0;
+let flipped = false;
+let editingIndex = null;
+
+// DOM elements
+const loginOverlay = document.getElementById('login-overlay');
+const loginForm = document.getElementById('login-form');
+const loginError = document.getElementById('login-error');
+const mainApp = document.getElementById('main-app');
+const userGreeting = document.getElementById('user-greeting');
+const logoutBtn = document.getElementById('logout-btn');
+const cardEl = document.getElementById('card');
+const qText = document.getElementById('q-text');
+const aText = document.getElementById('a-text');
+const progress = document.getElementById('progress');
+const deckList = document.getElementById('deck-list');
+const deckCount = document.getElementById('deck-count');
+const formContainer = document.getElementById('form-container');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+
+// Login handler
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const rememberMe = document.getElementById('remember-me').checked;
+
+  if (!username || !password) {
+    loginError.textContent = 'Please fill in all fields.';
+    return;
+  }
+
+  // Demo authentication: any username with password "flash123"
+  if (password !== 'flash123') {
+    loginError.textContent = 'Invalid password. Hint: use "flash123"';
+    return;
+  }
+
+  currentUser = username;
+  loginError.textContent = '';
+
+  // Persist login if "Remember me" is checked
+  if (rememberMe) {
+    localStorage.setItem('flashcardUser', username);
+  }
+
+  // Hide login, show app
+  loginOverlay.classList.add('hidden');
+  mainApp.style.display = 'block';
+  userGreeting.textContent = `👋 Hello, ${username}`;
+
+  renderCard();
+  renderDeckList();
+});
+
+// Logout handler
+logoutBtn.addEventListener('click', () => {
+  currentUser = null;
+  localStorage.removeItem('flashcardUser');
+  loginOverlay.classList.remove('hidden');
+  mainApp.style.display = 'none';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  loginError.textContent = '';
+  cardEl.classList.remove('flipped');
+  flipped = false;
+});
+
+// Check for existing session on load
+window.addEventListener('DOMContentLoaded', () => {
+  const savedUser = localStorage.getItem('flashcardUser');
+  if (savedUser) {
+    currentUser = savedUser;
+    loginOverlay.classList.add('hidden');
+    mainApp.style.display = 'block';
+    userGreeting.textContent = `👋 Hello, ${savedUser}`;
+    document.getElementById('remember-me').checked = true;
+    renderCard();
+    renderDeckList();
+  }
+});
+
+// Render the current flashcard
+function renderCard() {
+  if (deck.length === 0) {
+    qText.textContent = "No cards yet — add one to get started.";
+    aText.textContent = "";
+    progress.textContent = "0 of 0";
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+  prevBtn.disabled = false;
+  nextBtn.disabled = false;
+  const c = deck[current];
+  qText.textContent = c.q;
+  aText.textContent = c.a;
+  progress.textContent = `Card ${current + 1} of ${deck.length}`;
+  cardEl.classList.toggle('flipped', flipped);
+}
+
+// Render the deck list in the side panel
+function renderDeckList() {
+  deckCount.textContent = `Deck — ${deck.length} card${deck.length !== 1 ? 's' : ''}`;
+  if (deck.length === 0) {
+    deckList.innerHTML = '<div class="empty-note">Your deck is empty.</div>';
+    return;
+  }
+  deckList.innerHTML = deck.map((c, i) => `
+    <div class="deck-item ${i === current ? 'active' : ''}" data-idx="${i}">
+      <span class="deck-num">${i + 1}</span>
+      <span class="deck-q">${escapeHtml(c.q)}</span>
+      <span class="deck-actions">
+        <button class="icon-btn edit" data-action="edit" data-idx="${i}" title="Edit">✎</button>
+        <button class="icon-btn" data-action="delete" data-idx="${i}" title="Delete">✕</button>
+      </span>
+    </div>`).join('');
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Navigate to a specific card index
+function goTo(idx) {
+  if (deck.length === 0) return;
+  current = ((idx % deck.length) + deck.length) % deck.length;
+  flipped = false;
+  renderCard();
+  renderDeckList();
+}
+
+// Flip card on click
+cardEl.addEventListener('click', () => {
+  if (deck.length === 0) return;
+  flipped = !flipped;
+  cardEl.classList.toggle('flipped', flipped);
+});
+
+// Show Answer button
+document.getElementById('show-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (deck.length === 0) return;
+  flipped = !flipped;
+  cardEl.classList.toggle('flipped', flipped);
+});
+
+// Navigation buttons
+prevBtn.addEventListener('click', () => goTo(current - 1));
+nextBtn.addEventListener('click', () => goTo(current + 1));
+
+// Deck list interactions (edit, delete, select)
+deckList.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  const idx = btn ? parseInt(btn.dataset.idx) : null;
+
+  if (btn && btn.dataset.action === 'edit') {
+    openForm(idx);
+    return;
+  }
+
+  if (btn && btn.dataset.action === 'delete') {
+    deck.splice(idx, 1);
+    if (current >= deck.length) current = Math.max(0, deck.length - 1);
+    flipped = false;
+    renderCard();
+    renderDeckList();
+    return;
+  }
+
+  const item = e.target.closest('.deck-item');
+  if (item) goTo(parseInt(item.dataset.idx));
+});
+
+// Add card button
+document.getElementById('add-btn').addEventListener('click', () => openForm(null));
+
+// Open the add/edit form
+function openForm(idx) {
+  editingIndex = idx;
+  const isEdit = idx !== null;
+  const existing = isEdit ? deck[idx] : { q: '', a: '' };
+  formContainer.innerHTML = `
+    <div class="form-box">
+      <label>Question</label>
+      <textarea id="f-q" rows="2">${escapeHtml(existing.q)}</textarea>
+      <label>Answer</label>
+      <textarea id="f-a" rows="2">${escapeHtml(existing.a)}</textarea>
+      <div class="form-row">
+        <button class="save-btn" id="f-save">${isEdit ? 'Save changes' : 'Add card'}</button>
+        <button class="cancel-btn" id="f-cancel">Cancel</button>
+      </div>
+    </div>`;
+
+  document.getElementById('f-save').addEventListener('click', saveForm);
+  document.getElementById('f-cancel').addEventListener('click', closeForm);
+}
+
+// Close the form
+function closeForm() {
+  formContainer.innerHTML = '';
+  editingIndex = null;
+}
+
+// Save form data
+function saveForm() {
+  const q = document.getElementById('f-q').value.trim();
+  const a = document.getElementById('f-a').value.trim();
+  if (!q || !a) return;
+
+  if (editingIndex !== null) {
+    deck[editingIndex] = { q, a };
+  } else {
+    deck.push({ q, a });
+    current = deck.length - 1;
+  }
+
+  flipped = false;
+  closeForm();
+  renderCard();
+  renderDeckList();
+}
