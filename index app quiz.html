@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard Quiz App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,wght@0,500;0,600;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <h2>Welcome Back</h2>
+    <p class="login-sub">Sign in to access your flashcard deck</p>
+    <form id="login-form">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username" required autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password" required>
+      </div>
+      <div class="login-options">
+        <label class="remember">
+          <input type="checkbox" id="remember-me"> Remember me
+        </label>
+      </div>
+      <button type="submit" class="login-btn">Sign In</button>
+      <p class="login-hint">Demo: use any username with password <strong>"flash123"</strong></p>
+      <p class="login-error" id="login-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="wrap" id="main-app" style="display:none;">
+  <div class="app-header">
+    <div>
+      <div class="eyebrow">Study Tool</div>
+      <h1>Flashcard <em>Quiz</em></h1>
+      <p class="subtitle">A simple study deck with flip-to-reveal cards. Add, edit, or delete cards to customize your learning experience.</p>
+    </div>
+    <div class="user-info">
+      <span class="user-greeting" id="user-greeting"></span>
+      <button class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="scene">
+        <div class="stack-layer l2"></div>
+        <div class="stack-layer l1"></div>
+        <div class="card" id="card">
+          <div class="card-face card-front">
+            <div class="card-kicker">Question</div>
+            <div class="card-text" id="q-text"></div>
+            <div class="card-hint">click card to flip</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-kicker">Answer</div>
+            <div class="card-text" id="a-text"></div>
+            <div class="card-hint">click card to flip back</div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="nav-btn" id="prev-btn" title="Previous">←</button>
+        <button class="show-btn" id="show-btn">Show Answer</button>
+        <button class="nav-btn" id="next-btn" title="Next">→</button>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">
+        <span id="deck-count">Deck</span>
+        <button class="add-btn" id="add-btn">+ Add Card</button>
+      </div>
+      <div class="deck-list" id="deck-list"></div>
+      <div id="form-container"></div>
+    </div>
+  </div>
+
+  <footer>
+    Flashcard Quiz App — Flip through cards, test your knowledge, and manage your own study deck.
+  </footer>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
